@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload Excel — Convert sheets to PDFs</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page">
+    <div class="card">
+      <div class="card-inner">
+        <h1 class="title">حوّل أوراق Excel إلى ملفات PDF</h1>
+        <p class="subtitle">رفع ملف Excel (.xlsx / .xls). كل شيت سيُحوَّل لملف PDF باسم الشيت نفسه.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form id="uploadForm" method="post" action="{{ url_for('convert') }}" enctype="multipart/form-data">
+          <div id="dropzone" class="dropzone">
+            <input type="file" name="excel" id="excelInput" accept=".xlsx,.xls" style="display:none;">
+            <div class="drop-content">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 7l4-4 4 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div class="drop-text">
+                اسحب الملف هنا أو <a href="#" id="browseLink">اختر ملفاً</a>
+                <div class="hint">يمكنك رفع ملف .xlsx أو .xls — الحد الأقصى 200MB</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="filePreview" class="file-preview hidden">
+            <div class="file-meta">
+              <div>
+                <div id="fileName" class="file-name"></div>
+                <div id="fileSize" class="file-size"></div>
+              </div>
+              <div>
+                <button id="removeFile" type="button" class="btn btn-ghost">إزالة</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="submitBtn" class="btn primary" type="submit">تحويل وتحميل ZIP</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const excelInput = document.getElementById('excelInput');
+const browseLink = document.getElementById('browseLink');
+const filePreview = document.getElementById('filePreview');
+const fileNameEl = document.getElementById('fileName');
+const fileSizeEl = document.getElementById('fileSize');
+const removeFileBtn = document.getElementById('removeFile');
+const submitBtn = document.getElementById('submitBtn');
+const uploadForm = document.getElementById('uploadForm');
+
+browseLink.addEventListener('click', (e)=>{ e.preventDefault(); excelInput.click(); });
+
+dropzone.addEventListener('click', ()=> excelInput.click());
+
+dropzone.addEventListener('dragover', (e)=> { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', (e)=> { e.preventDefault(); dropzone.classList.remove('dragover'); });
+
+dropzone.addEventListener('drop', (e)=> {
+  e.preventDefault(); dropzone.classList.remove('dragover');
+  const dt = e.dataTransfer;
+  if (dt.files && dt.files.length) {
+    excelInput.files = dt.files;
+    showFile(dt.files[0]);
+  }
+});
+
+excelInput.addEventListener('change', ()=> {
+  if (excelInput.files && excelInput.files[0]) showFile(excelInput.files[0]);
+});
+
+removeFileBtn.addEventListener('click', ()=> {
+  excelInput.value = "";
+  filePreview.classList.add('hidden');
+});
+
+function showFile(file){
+  filePreview.classList.remove('hidden');
+  fileNameEl.textContent = file.name;
+  fileSizeEl.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+uploadForm.addEventListener('submit', (e)=> {
+  if (!excelInput.files || !excelInput.files.length) {
+    e.preventDefault();
+    alert("الرجاء اختيار ملف Excel أولاً.");
+  } else {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "جارٍ التحويل…";
+  }
+});
+</script>
+</body>
+</html>
