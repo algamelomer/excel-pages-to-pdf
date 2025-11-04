@@ -5,3 +5,4 @@ xlrd>=2.0.1
 reportlab>=3.6.12
 arabic-reshaper>=0.3.0
 python-bidi>=0.4.2
+gunicorn
